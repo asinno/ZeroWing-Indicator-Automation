@@ -31,22 +31,23 @@ function Connect-ToEndPoint {
     $Index = '0'
   }
   Write-Verbose -Message 'Forwarding Port from CAJ Tunnel to Carbon Black Appliance'
-  if($CarbonBlackPort -eq $null)
+  if($CarbonBlackPort.Length -eq 0)
   {
     Write-Warning -Message 'Warning appliance port not specified, setting to 8443 by default'
     $CarbonBlackPort = 8443
   }
   New-SSHLocalPortForward -Index $Index -BoundHost 127.0.0.1 -BoundPort $LocalPort -RemoteAddress $EndPoint -RemotePort $CarbonBlackPort
-  Get-ListOfConnections
 }
 function Get-ListOfConnections {
-  Write-Host 'List of Open Connections:'
-  Write-Host '========================='
+  Write-Host
+  Write-Host 'List of Open Connections:' -ForegroundColor Green
+  Write-Host '=========================' -ForegroundColor Green
   $lport = Get-CurrentHostPort
   Foreach($p in $lport)
   {
     Write-Host "https://localhost:$p"
   }
+  Write-Host
 }
 function Get-CurrentHostPort {
   param(
@@ -79,13 +80,13 @@ function Start-MultipleConnections {
   Connect-ToEndPoint -EndPoint 10.188.31.73  -LocalPort 8081
   # DELL CSO2
   Write-Warning -Message 'Connecting to Dell CSO 2'
-  Connect-ToEndPoint -EndPoint 10.188.31.74  -LocalPort 8082 
+  Connect-ToEndPoint -EndPoint 10.188.31.74  -LocalPort 8082
   # DELL CSO3
   Write-Warning -Message 'Connecting to Dell CSO 3'
-  Connect-ToEndPoint -EndPoint 10.188.32.111 -LocalPort 8083 
+  Connect-ToEndPoint -EndPoint 10.188.32.111 -LocalPort 8083
   # KELLOGG
   Write-Warning -Message 'Connecting to Kellogg'
-  Connect-ToEndPoint -EndPoint 10.188.25.231 -LocalPort 8084 
+  Connect-ToEndPoint -EndPoint 10.188.25.231 -LocalPort 8084
   # BAIN
   Write-Warning -Message 'Connecting to Bain'
   Connect-ToEndPoint -EndPoint 10.188.28.1 -LocalPort 8085
@@ -104,6 +105,6 @@ function Start-MultipleConnections {
   # University of Alabama
   Connect-ToEndPoint -EndPoint 10.188.19.173 -LocalPort 8090
   Write-Warning -Message 'Connecting to University of Alabama'
-  Get-ListOfConnections
   Write-Warning -Message 'Connections Established'
+  Get-ListOfConnections
 }
