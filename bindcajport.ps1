@@ -2,9 +2,14 @@
 function Connect-ToCAJ {
   if($sessionstatus -ne 'True')
   {
-    Write-Warning -Message 'Establishing SSH Connection...'
-    $creds = Get-Credential -Credential $uname
-    New-SSHSession -ComputerName atl1isensorcaj01.srv.secureworks.net -Credential $creds | Format-List
+      $SessionStatus = Get-SessionStatus
+    if ($SessionStatus.Length -eq 0)
+    {
+      Connect-ToCAJ
+      Write-Warning -Message 'Establishing SSH Connection...'
+      $creds = Get-Credential -Credential $uname
+      New-SSHSession -ComputerName atl1isensorcaj01.srv.secureworks.net -Credential $creds | Format-List
+    }
   }
 }
 function Get-SessionStatus
@@ -22,7 +27,7 @@ function Connect-ToEndPoint {
     [string]$Index
   )
   $SessionStatus = Get-SessionStatus
-  if ($SessionStatus -eq $null)
+  if ($SessionStatus.Length -eq 0)
   {
     Connect-ToCAJ
   }
