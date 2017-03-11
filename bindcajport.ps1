@@ -1,17 +1,14 @@
 ﻿$uname= [Environment]::UserName
+
 function Connect-ToCAJ {
-  if($sessionstatus -ne 'True')
-  {
-      $SessionStatus = Get-SessionStatus
+$SessionStatus = Get-SessionStatus
     if ($SessionStatus.Length -eq 0)
     {
-      Connect-ToCAJ
       Write-Warning -Message 'Establishing SSH Connection...'
       $creds = Get-Credential -Credential $uname
       New-SSHSession -ComputerName atl1isensorcaj01.srv.secureworks.net -Credential $creds | Format-List
     }
   }
-}
 function Get-SessionStatus
 {
   Get-SSHSession |
@@ -23,7 +20,7 @@ function Connect-ToEndPoint {
   param(
     [Parameter(Mandatory=$true,HelpMessage='Please enter the IP for the Carbon Black Appliance')][string]$EndPoint,
     [Parameter(Mandatory=$true,HelpMessage='Please select a non-conflicting port above 1025')][string]$LocalPort,
-    [string]$CarbonBlackPort,
+    [string]$RemotePort,
     [string]$Index
   )
   $SessionStatus = Get-SessionStatus
@@ -36,12 +33,12 @@ function Connect-ToEndPoint {
     $Index = '0'
   }
   Write-Verbose -Message 'Forwarding Port from CAJ Tunnel to Carbon Black Appliance'
-  if($CarbonBlackPort.Length -eq 0)
+  if($RemotePort.Length -eq 0)
   {
-    Write-Warning -Message 'Warning appliance port not specified, setting to 8443 by default'
-    $CarbonBlackPort = 8443
+    Write-Warning -Message 'Appliance port not specified, setting to 8443 by default'
+    $RemotePort = 8443
   }
-  New-SSHLocalPortForward -Index $Index -BoundHost 127.0.0.1 -BoundPort $LocalPort -RemoteAddress $EndPoint -RemotePort $CarbonBlackPort
+  New-SSHLocalPortForward -Index $Index -BoundHost 127.0.0.1 -BoundPort $LocalPort -RemoteAddress $EndPoint -RemotePort $RemotePort
 }
 function Get-ListOfConnections {
   Write-Host
@@ -72,14 +69,11 @@ function Stop-PortFowardConnections {
   Where-Object {$_.IsStarted -eq 'True'} | 
   Select-Object -Property BoundPort | 
   %{ $_.BoundPort }
-  $bHost = Get-SSHPortForward -Index 0 | 
-  Where-Object {$_.IsStarted -eq 'True'} | 
-  Select-Object -Property BoundHost | 
-  %{ $_.BoundHost }
-  Stop-SSHPortForward -Index 0 -BoundPort $bPort -BoundHost $bHost
+ foreach($p in $bPort)
+ {Stop-SSHPortForward -Index 0 -BoundPort $p -BoundHost '127.0.0.1'}
 }
 function Start-MultipleConnections {
-  Connect-ToCAJ
+  Connect-ToCAJ $ErrorActionPreference = 'Stop'
   # DELL CSO1
   Write-Warning -Message 'Connecting to Dell CSO 1'
   Connect-ToEndPoint -EndPoint 10.188.31.73  -LocalPort 8081
@@ -99,7 +93,7 @@ function Start-MultipleConnections {
   Write-Warning -Message 'Connecting to Aramco'
   Connect-ToEndPoint -EndPoint 10.188.36.31 -LocalPort 8086
   # ALLEN & OVERY 1
-  Write-Warning -Message 'Connecting to Allen and Overy'
+  Write-Warning -Message 'Connecting to Allen and Overy 1'
   Connect-ToEndPoint -EndPoint 10.188.26.87 -LocalPort 8087
   # Union Bank
   Write-Warning -Message 'Connecting to Union Bank'
