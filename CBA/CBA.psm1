@@ -31,7 +31,8 @@
      'Process'   = ('/api/v1/process?q={0}' -f $Search)
      'Benchmark' = ('/api/v1/process?q={0}' -f $Search)
      'Binary'    = ('/api/v1/binary/{0}/summary' -f $Search)
-     'Sensor'    = '/api/v1/sensor'     'Blacklist' = '/api/v1/banning/blacklist'
+     'Sensor'    = '/api/v1/sensor'
+     'Blacklist' = '/api/v1/banning/blacklist'
      'Watchlist' = '/api/v1/watchlist'
      'Feed'      = '/api/v1/feed'
      'HostInfo'  = ('/api/v1/sensor?hostname={0}' -f $Search)
@@ -42,7 +43,8 @@
  #  $hashTableCalculatedProperties = @{
  #    'Process'   = ''
  #    'Binary'    = ''
- #    'Sensor'    =  "$SensorInformation" #    'Blacklist' = ''
+ #    'Sensor'    =  "$SensorInformation"
+ #    'Blacklist' = ''
  #    'Watchlist' = ''
  #    'Feed'      = ''
  #    'HostInfo'  = ''
@@ -61,18 +63,8 @@
      [string]$QueryToTest
    )
    # Query All Devices
-   Write-Host 'Testing Carbon Black Query, please wait...' -ForegroundColor Green
-   $dellCso1Query    = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8081' -Key '1c1039fd73fcd6d3f520c2907146046d29be748f'
-   $dellCso2Query    = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8082' -Key '28e153cbd4deca38b6c1553a72d10f9568c8593c'
-   $dellCso3Query    = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8083' -Key 'd7035103c53f95d89aa78152507e89a68c44abe5'
-   $kelloggQuery     = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8084' -Key 'ff95f473ec105b82950a1468bbda74b27a263d95'
-   $bainQuery        = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8085' -Key 'd61e2adc8567aa467fad74cb7717fbf20425136d'
-   $aramcoQuery      = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8086' -Key '870f89817600b21d736a9354ba892a688f8a6ab0'
-   $allenOvery1Query = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8087' -Key '6655a1bc72c1c1ae709e016a7414f121ade6a040'
-   $unionBankQuery   = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8088' -Key 'd289c677aff8869d7dac3763d9004a0a3333cba4'
-   $newYorkJetsQuery = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8089' -Key '8b28fec88d2bd1c6da6ae94855fa6b89bb845378'
-   $uOfAQuery        = Search-CarbonBlackAppliance -QueryType Benchmark -Search $QueryToTest -URL 'https://localhost:8090' -Key '2b8f86fc18f7c138c53a0f5a4c8cc12a36a4ce81'
-  
+
+
    # Generate Calculated Properties
    $watchlistResults =
    @{e={$_.terms}
@@ -85,23 +77,6 @@
    l='Total Results'}
    
    # Create PSObject 
-   New-Object -TypeName PSObject -Property @{
-     'Dell CSO 1'                  = $dellCso1Query | Select-Object $watchlistResults
-     'Dell CSO 2'                  = $dellCso2Query | Select-Object $watchlistResults
-     'Dell CSO 3'                  = $dellCso3Query | Select-Object $watchlistResults
-     'Kellogg Brown & Root LLC'    = $kelloggQuery | Select-Object $watchlistResults
-     'Bain Capital, LP, Boston'    = $bainQuery | Select-Object $watchlistResults
-     'Aramco'                      = $aramcoQuery | Select-Object $watchlistResults
-     'Allen & Overy LLP, London 1' = $allenOvery1Query | Select-Object $watchlistResults
-     'Union Bank'                  = $unionBankQuery | Select-Object $watchlistResults
-     'New York Jets'               = $newYorkJetsQuery | Select-Object $watchlistResults
-     'University of Alabama'       = $uOfAQuery | Select-Object $watchlistResults
-   } | ForEach-Object { # Enumerate Values
-     foreach ($p in $_.PSObject.Properties) {
-       $p.Value | Select-Object @{n='Client';e={$p.Name}},*
-     }
-   }
- }
  # Create Calculated Properties
  $SensorInformation =
  @{e={$_.systemvolume_total_size}
