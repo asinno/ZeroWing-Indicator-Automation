@@ -1,4 +1,4 @@
-﻿function Get-SecureWorksCredVault {
+﻿function Get-CredVault {
   param(
     [switch]$AddCred,
     [switch]$Getcred,
@@ -52,7 +52,7 @@ function Get-APIKey {
   param(
     [string]$ClientID
   )
-  $creds = Get-SecureWorksCredVault -Getcred |
+  $creds = Get-CredVault -Getcred |
   Where-Object {$_.ClientID -eq $ClientID } | 
   Select-Object -Property APIKey
   $creds.psobject.Members | ? {$_.Membertype -eq "noteproperty"} | 
@@ -62,7 +62,7 @@ function Get-ClientEndPoint {
   param(
     [string]$ClientID
   )
-  $endPoint = Get-SecureWorksCredVault -Getcred |
+  $endPoint = Get-CredVault -Getcred |
   Where-Object {$_.ClientID -eq $ClientID } | 
   Select-Object -Property APIEndpoint
   $endPoint.psobject.Members | ? {$_.Membertype -eq "noteproperty"} | 
