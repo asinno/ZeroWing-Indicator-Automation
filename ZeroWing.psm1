@@ -17,19 +17,12 @@ function TestMenu {
     }
 
     elseif ($SingleQuery -eq $True) {
-
         Get-AsciiArt -ZeroWing
-
         Write-Host '+ Start   - begins the testing script      '
-
         Write-Host '+ Show    - enumarate connected clients    '
-
         Write-Host '+ Exit    - exits from the script          '
-
         Write-Host '+ Credits - Authors                        '
-
         Write-Host
-
     }
 
 }
@@ -37,51 +30,33 @@ function TestMenu {
 # Loading Web Assemblies
 
 [Reflection.Assembly]::LoadWithPartialName("System.Web") | Out-Null
-
-
 #Trust all certs
-
 Add-Type -TypeDefinition @'
-
     using System.Net;
-
     using System.Security.Cryptography.X509Certificates;
-
     public class TrustAllCertsPolicy : ICertificatePolicy {
-
         public bool CheckValidationResult(
-
             ServicePoint srvPoint, X509Certificate certificate,
-
             WebRequest request, int certificateProblem) {
-
             return true;
-
         }
-
     }
-
 '@
 
  
 
 ##############################################################
-
 #               Carbon Black Query Validation Set            #
-
 ##############################################################
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName TrustAllCertsPolicy
-$Prompt =
-
-"Write-Host '<=Zer' -ForegroundColor Yellow -NoNewline; Write-Host 'oW' -ForegroundColor Red -NoNewline; Write-Host 'ing=>' -ForegroundColor Blue -NoNewline"
+$Prompt = "Write-Host '<=Zer' -ForegroundColor Yellow -NoNewline; Write-Host 'oW' -ForegroundColor Red -NoNewline; Write-Host 'ing=>' -ForegroundColor Blue -NoNewline"
 $CountConnections = 0
 $BinaryDecision = @('y', 'n')
 #Begin Function Search CB
 function Search-CarbonBlackAppliance {
     [CmdletBinding()]
-
     param(
         [CmdletBinding(SupportsShouldProcess = $True)]
         [ValidateSet('Process', 'Binary', 'Sensor', 'Blacklist', 'Watchlist', 'Feed', 'HostInfo', 'Alert', 'License', 'Benchmark')]
@@ -99,141 +74,80 @@ function Search-CarbonBlackAppliance {
     $hashTableUrl = @{
 
         'Process' = ('/api/v1/process?q={0}' -f $Search)
-
         'Benchmark' = ('/api/v1/process?q={0}' -f $Search)
-
         'Binary' = ('/api/v1/binary/{0}/summary' -f $Search)
-
         'Sensor' = '/api/v1/sensor'
-
         'Blacklist' = '/api/v1/banning/blacklist'
-
         'Watchlist' = '/api/v1/watchlist'
-
         'Feed' = '/api/v1/feed'
-
         'HostInfo' = ('/api/v1/sensor?hostname={0}' -f $Search)
-
         'Alert' = '/api/v1/alert'
-
         'License' = '/api/v1/license'
-
     }
 
     $fullPath = $hashTableUrl[$QueryType]
-
-  
-
+    
     #Query EndPoint
-
     $Query = Invoke-RestMethod -uri $URL$fullPath -Headers @{'X-Auth-Token' = $Key}
-
-  
-
+    
     #HashTable for Templates
-
     $hashTableFormat = @{
-
         'Process' = $Query.results | Select-Object -Property $ProcessInformation
-
         'Binary' = $Query
-
         'Benchmark' = $Query | Select-Object -Property $watchlistResults
-
         'Sensor' = $Query
-
         'Blacklist' = $Query
-
         'Watchlist' = $Query
-
         'Feed' = $Query
-
         'HostInfo' = $Query
-
         'Alert' = $Query
-
         'License' = $Query
-
     }
-
     $hashTableFormat[$QueryType]
-
 }
 
- 
 
 ################################################################################
-
 #             Query Testing Function for Feeds and single queries              #
-
 ################################################################################
 
  
 
 function Test-CBQuery {
-
     #Main CB Tester Script
-
     param(
-
         [Switch]$SingleQuery,
-
         [Switch]$Feed
-
     )
 
     Write-Host '====================================' -ForegroundColor Yellow
-
     Write-Host '        Attention Gentlemen!        ' -ForegroundColor Red
-
     Write-Host '====================================' -ForegroundColor Yellow
-
     Write-Host
-
     Write-Host 'Please be mindful of client confidentiality, polution and availability. This script was meant to benefit the team, however, carelessness will not be tolerated.'
-
     $Agreement = Read-Host 'Please type [Y/y] to acknowledge this warning.'
 
     if ($Agreement -ine 'y') {
-
         break
-
     }
-
-  
-
     #Outer Most Loop
-
     :StartLoop while ($true) {
-
         if ($Query -ne $null) {
-
         }
 
         Clear-Host
-
- 
-
         # Connect to devices list in KeePass database
-
-    
-
         Write-Host 'Please enter the KeePass password' -ForegroundColor Yellow
-
         Write-Host
 
         try {
-
             $AllClients = Connect-ToKeePass
-
         }
 
         catch {
-
             if ($error.Exception -match "CommandNotFoundException") {
                 Write-Error "You are not connected to the ZeroWing server!"
             }
-
             else {
                 Clear-Host
                 Write-Host 'In order to proceed we must connect you to the ZeroWing StarShip!' -ForegroundColor Red
@@ -246,65 +160,35 @@ function Test-CBQuery {
         }
 
         finally {
-
- 
-
         }
-
         if ($AllClients.Client -eq $null) {
-
             Write-Warning -Message 'Terminating script: There is no client data to make connections'
-
             Start-Sleep -Seconds 2
-
             continue StartLoop
-
         }
 
  
 
         if(($AllClients.'NAT IP'| Group-Object | Where-Object { $_.Count -gt 1 } | Select-Object -ExpandProperty Name) -gt 0)
-
         {
-
             Write-Host 'Warning the KeePass database contains duplicate entries..... TERMINATING ZEROWING...GG' -ForegroundColor Red
-
             break StartLoop
-
         }
 
- 
-
         $NewClientTable = @()
-
- 
-
         #Create Client Table and insert IP addresses as well as releveant information
 
         foreach ($Client in $AllClients.Client) {
-
             $IPAsObject = $AllClients.'NAT IP'[$CountConnections]
-
             $IPAsString = $IPAsObject | Out-String
-
             #Connect to Carbon Black Appliances here
 
             #try {
-
                 Write-Host "Connecting to $Client"
-
- 
-
                 Connect-ToEndPoint -EndPoint $IPAsString -LocalPort 9999  -ErrorAction Stop
-
- 
-
             #}
-
             #catch {
-
                # if ($error.Exception -match "denied") {
-
               #      Write-Error "Please enter a correct CAJ PIN and Token."
 
              #   }
@@ -314,35 +198,19 @@ function Test-CBQuery {
            #     continue StartLoop
 
           #  }
-
- 
-
             #Enumerate the BoundHostValue
-
             $FullAddress = Get-SSHPortForward -Index 0 |
-
                 Select-Object -Property BoundHost |
-
                 Where-Object {$_.Host -eq $IP }
-
- 
-
+                
             #Check tunneled connections
-
             $ClientConnectionIP = $FullAddress.BoundHost
-
- 
-
+            
             #$IndexedIP =
-
             #if ($CountConnections -eq 0 ) {
-
             #    $ClientConnectionIP |
-
             #        Select-Object -First 1
-
             #}
-
             #else {
 
             #    $ClientConnectionIP[$CountConnections]
@@ -350,97 +218,52 @@ function Test-CBQuery {
             #}
 
             #Create PSOBJECT Table
-
- 
-
           $NewClientTable += New-Object -TypeName PSObject -Property @{
-
                 'Client' = $AllClients.Client[$CountConnections];
-
                 'URL' = "{0}{1}{2}" -f 'https://', $ClientConnectionIP[$CountConnections], ":9999";
-
                 'API' = $AllClients.API[$CountConnections];
-
             }
-
             $CountConnections++
-
         }
-
- 
 
         $OpenConnections = $NewClientTable.Client.Count
-
         if ($OpenConnections = 0) {
-
             Write-Warning -Message 'There are no open connections'
-
             break
-
         }
-
         :outer while ($true) {
-
             Clear-Host
-
             $NewTotal = 0
-
             $QueryCounter = 0
-
             $TermViolations = New-Object  -TypeName psobject -Property @{
-
                 'Parenthetical Negation' = '-('
-
             }
-
             $FeedList = New-Object  -TypeName psobject -Property @{
-
                 'SecureWorks CTP' = '\*'
-
             }
 
             #Start a menu for guiding the user
-
             TestMenu
-
             "Currently there are {0} clients connected" -f $NewClientTable.Client.Count
-
             :menuloop while ($true) {
-
                 #Creates switch specific to feeds or indicator testing
-
                 if ($feed -eq $true) {
-
                     Invoke-Expression ($Prompt)
-
                     $UserDecision = Read-Host
-
                     switch ($UserDecision) {
-
                         start {break menuloop}
-
                         show {$AllClients | Format-Table}
-
                         0 {
-
                             $ScoreRange = Read-Host 'Please enter your threat score range. For example "1 to 100"'
-
                             $Query = "alliance_score_alienvault:[$ScoreRange]"
-
                             break menuloop
-
                         }
-
                         1 {}
-
                         2 {}
-
                         3 {}
 
                         show {$AllClients | Format-Table}
-
                         exit {break StartLoop}
-
                         credits {Start-DialogueZW}
 
                     }
@@ -448,139 +271,79 @@ function Test-CBQuery {
                 }
 
                 else {
-
                     Invoke-Expression ($Prompt)
-
                     $UserDecision = Read-Host
-
                     switch ($UserDecision) {
-
                         start {break menuloop}
-
                         show {$AllClients | Format-Table}
-
                         ? {Write-Host 'What are you so confused about?'}
-
                         #cm         {if($Query -ne $null){Clear-Variable Query}; Clear-Host; Start-ConverterPrompt}
-
                         syntax {$TermViolations | Format-List}
-
                         exit {break StartLoop}
-
                         credits {Start-DialogueZW}
-
                     }
-
                 }
-
             }
-
             if ($SingleQuery -eq $true) {
-
                 #Capture query for testing, then iterate through all open connections
-
                 Write-Host '=============================================='
-
                 Write-Host 'Type "exit" to return to menu or enter a query'
-
                 Write-Host '=============================================='
 
                 Invoke-Expression ($Prompt)
-
                 $Query = Read-Host ' Please enter your query'
-
                 if ($Query -ieq 'exit') {
-
                     continue outer
-
                 }
-
             }
 
             while ($Query -eq $null) {
-
                 Invoke-Expression ($Prompt)
-
                 $Query = Read-Host ' Please enter a query that is not null'
-
             }
 
             #Dynamically build PowerShell collections Object for API keys and URLs
 
             $CollectionOfClients = @()
-
             $ResultCollection = @()
-
             $JobCounter = 0
-
  
-
             #Clear Job Slate
-
             Remove-Job *
 
  
 
             #Begin to iterate and test clients - test loop
-
             foreach ($Client in $NewClientTable.Client) {
-
                 $URL = $NewClientTable.URL[$QueryCounter]
-
                 $API = $NewClientTable.API[$QueryCounter]
-
                 $QueryTime = 0
 
-        
-
                 #URL Encode the Query
-
                 [Reflection.Assembly]::LoadWithPartialName("System.Web") | Out-Null
-
                 $EncodedQuery = [System.Web.HttpUtility]::UrlEncode("$Query")
 
             
 
                 #Begin Query to Carbon Black device
-
                 if ($SingleQuery -eq $true) {
-
- 
-
                     Write-Host "[Processing '$Client']" -ForegroundColor Green
-
                     # Execute the jobs in parallel
-
                     $ScriptBlock = {
-
                         param(
-
                             [string]$URL,
-
                             [string]$EncodedQuery,
-
                             [string]$API,
-
                             [string]$Client
-
                         )
-
                         Add-Type -TypeDefinition @'
-
                         using System.Net;
-
                         using System.Security.Cryptography.X509Certificates;
-
                         public class TrustAllCertsPolicy : ICertificatePolicy {
-
                         public bool CheckValidationResult(
-
                         ServicePoint srvPoint, X509Certificate certificate,
-
                         WebRequest request, int certificateProblem) {
-
                         return true;
-
                                                     }
 
                                                                 }
@@ -588,233 +351,117 @@ function Test-CBQuery {
 '@
 
                        #Allows powershell to trust all certs
-
                         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
                         [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName TrustAllCertsPolicy
-
- 
-
                         #Prioritize Jobs in background
-
                         [System.Threading.Thread]::CurrentThread.Priority = 'AboveNormal'
-
                         ([System.Diagnostics.Process]::GetCurrentProcess()).PriorityClass = 'AboveNormal'
-
- 
-
+                        
                         #Makes Web request for data
-
                         Invoke-WebRequest -Uri "$url/api/v1/process?q=$EncodedQuery" -Headers @{'X-Auth-Token' = "$api"} | ConvertFrom-Json
-
-                       
-
                         #Communicate to end user that job has been completed
-
                         Write-Host "[Client '$Client' completed]" -ForegroundColor Green
-
                     }
-
                     Start-Job -Name $Client $ScriptBlock -ArgumentList $URL, $EncodedQuery, $API , $Client | Out-Null
-
                 }
 
                 $QueryCounter++
-
-               
-
                 #Process at 10 jobs
-
                 if ($JobCounter -gt 9) {
-
                     $StopCounter = 0
-
                     While ((Get-Job -State "Running").Count -gt 8) {
-
                         Start-Sleep -Seconds 1
-
                         $StopCounter++
-
                         if ($StopCounter -eq 10) {
-
                             #Inform user which clients are taking a long time to finish
-
                             $RunningJobs = (Get-Job -State Running).Name -join ', '
-
                             Write-Warning -Message "Client(s) '$RunningJobs' is/are taking a long time and will terminate shortly if they do not finish in 10 seconds."
-
                             Clear-Variable RunningJobs
-
                         }
-
                         # Stop jobs that have been taking longer than 20 seconds
-
                         if ($StopCounter -eq 20) {
-
                             $RunningJobs = (Get-Job -State Running).Name -join ', '
-
                             Write-Host "Terminating job(s) '$RunningJobs'" -ForegroundColor Red
-
                             Stop-Job -State Running
-
                         }
-
                     }
-
                     $JobCounter = 0
-
                 }
-
                 $JobCounter++
-
             }
-
             $StopCounter = 0
 
             #Check for straggler jobs still running
-
             While (Get-Job -State "Running") {
-
-               
-
                 if ($StopCounter -eq 0) {
-
                     Write-Host '[Finishing up the last couple of jobs]' -ForegroundColor Yellow
-
                     (Get-Job -State Running).Name
-
                 }
-
                 Start-Sleep -Seconds 1
-
                 $StopCounter++
-
                 if ($StopCounter -eq 10) {
-
                     #Inform user which clients are taking a long time to finish
-
                     $RunningJobs = (Get-Job -State Running).Name -join ' ,'
-
                     Write-Warning -Message "Client(s) '$RunningJobs' is/are taking a long time and will terminate shortly if they do not finish in 10 seconds."
-
                     Clear-Variable RunningJobs
-
                 }
 
                 # Stop jobs that have been taking longer than 20 seconds
-
                 if ($StopCounter -eq 20) {
-
                     $RunningJobs = (Get-Job -State Running).Name -join ' ,'
-
                     Write-Host "Terminating job(s) '$RunningJobs'" -ForegroundColor Red
-
                     Stop-Job -State Running
-
                 }
-
             }
-
-   
-
- 
 
             #Obtain list of completed jobs to store in psobject
-
             Write-Host '[Compiling list of succesful jobs]' -ForegroundColor Green
-
             $AllJobNames = @()
-
             $JobCompleteList = Get-Job -State Completed
-
             foreach ($JobName in $JobCompleteList.Name) {
-
                 $AllJobNames += New-Object -TypeName psobject -Property @{
-
                     "Name" = $JobName
-
                 }
-
             }
-
             Write-Host '[List of succesfully completed jobs are below]' -ForegroundColor Yellow
-
             #Retrieve Job Results
-
             $Results = Get-Job | Receive-Job
-
             Write-Host '[Storing values into PowerShell objects for formating]' -ForegroundColor Green
-
            $ClientCounter = 0
-
             foreach ($Job in $Results) {
-
                 #Build Object containing results
-
                 $CollectionOfClients += New-Object  -TypeName psobject -Property @{
-
                     "Client" = $AllJobNames.Name[$ClientCounter];                  
-
                     "Terms" = $Job.terms -join ',';      
-
                     "Start" = $Job.Start;       
-
                     "Elapsed" = $Job.Elapsed;     
-
                     "Total" = $Job.total_results;
-
                 }
-
                 $TotalResults = $Job.total_results
-
- 
-
                 foreach ($Result in $Job.Results) {
-
                     $ResultCollection += New-Object -TypeName psobject -Property @{
-
                         "Client" = $AllJobNames.Name[$ClientCounter];
-
                         "Process Md5" = $Result.process_md5;
-
                         "Sensor" = $Result.sensor_id;
-
                         "Modloads" = $Result.modload_count;
-
                         "File Mods" = $Result.filemod_count;
-
                         "Child Processes" = $Result.childproc_count;
-
                         "Regmods" = $Result.regmod_count;
-
                         "Virus Total" = $Result.alliance_link_virustotal;
-
                         "Process Name" = $Result.process_name;
-
                         "Parent Process" = $Result.parent_name;
-
                         "Parent MD5" = $Result.parent_md5;
-
                         "cmdline" = $Result.cmdline;
-
                         "Group" = $Result.group;
-
                         "Hostname" = $Result.hostname;
-
                         "Username" = $Result.username;
-
                         "ID" = $Result.unique_id;
-
                     }
-
                 }
 
                 #Counter for array index
-
                 $ClientCounter++
-
                 $NewTotal += $TotalResults
-
             }
 
        
@@ -824,23 +471,15 @@ function Test-CBQuery {
             #Begin analyzing results as a psobject for manipulation
 
             :DisplayLoop while ($true) {
-
                 Write-Host "There are currently $NewTotal result(s)" -ForegroundColor Yellow
-
                 Invoke-Expression ($Prompt)
-
                 $DecisionArray = @('c', 'g', 't', "")
-
                 $UserDecision = Read-Host ' Export-Csv[C] - GridView [G] - Format-Table [T]'
-
  
-
                 #Check for correct arguments in client collection object
 
                 while ($DecisionArray -notcontains $UserDecision) {
-
                     Invoke-Expression ($Prompt)
-
                     $UserDecision = Read-Host ' Please select a proper format [C][G][T]'
 
                 }
@@ -850,25 +489,17 @@ function Test-CBQuery {
                 #Begin decision switch for analysis review
 
                 switch ($UserDecision) {
-
                     c {
-
                         Invoke-Expression ($Prompt)
-
                         $filename = Read-Host ' Please specify a file name. CSVs are automatically saved to your desktop.'
-
                         $CollectionOfClients |
-
                             Export-Csv -Path $env:USERPROFILE\Desktop\$filename
 
                     }
 
                     g {
-
                         $CollectionOfClients |
-
                             Out-GridView -Title 'Collection Of Client Results'
-
                     }
 
                     t {
